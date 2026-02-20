@@ -6,7 +6,7 @@ from flask import Flask
 from threading import Thread
 import os
 
-# --- Flask Server (Keep Alive) ---
+# --- Flask Server (বটকে জাগিয়ে রাখার জন্য) ---
 app = Flask('')
 
 @app.route('/')
@@ -14,25 +14,27 @@ def home():
     return "I am alive!"
 
 def run():
-    # Render সাধারণত 8080 বা 10000 পোর্ট ব্যবহার করে
-    app.run(host='0.0.0.0', port=8080)
+    # Render-এর ডাইনামিক পোর্ট ব্যবহার করবে, না থাকলে ৮০৮০-এ চলবে
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
 
 def keep_alive():
     t = Thread(target=run)
     t.start()
 
-# --- Discord Bot Code ---
-# ⚠️ টোকেনটি দ্রুত রিসেট করুন এবং এখানে নতুন টোকেন দিন
+# --- ডিসকর্ড বট কনফিগারেশন ---
+# টোকেনটি সরাসরি না লিখে Render-এর Environment Variable থেকে আনা হয়েছে
 TOKEN = os.environ.get('DISCORD_TOKEN')
 CLAIM_URL = 'http://92.118.206.166:30282/claim_free_access'
 
+# ব্র্যান্ডিং কালার কোড
 COLOR_MAIN = 0x5865F2  
 COLOR_SUCCESS = 0x2ECC71 
 COLOR_ERROR = 0xE74C3C   
 COLOR_PROCESS = 0xF1C40F 
 
 intents = discord.Intents.default()
-intents.message_content = True
+intents.message_content = True  # মেসেজ পড়ার পারমিশন
 
 bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
 
@@ -46,6 +48,8 @@ async def on_ready():
 
 @bot.command()
 async def free(ctx, uid: str = None):
+    """Premium bypass command"""
+    
     if uid is None:
         embed = discord.Embed(
             title="⚠️ Access Denied",
@@ -94,7 +98,8 @@ async def free(ctx, uid: str = None):
             if bot.user.avatar:
                 final_embed.set_thumbnail(url=bot.user.avatar.url)
             
-            final_embed.set_footer(text=f"Requested by {ctx.author.name} • Developed by TANVIR", icon_url=bot.user.avatar.url if bot.user.avatar else None)
+            final_embed.set_footer(text=f"Requested by {ctx.author.name} • Developed by TANVIR", 
+                                   icon_url=bot.user.avatar.url if bot.user.avatar else None)
 
             await status_msg.edit(embed=final_embed)
         else:
@@ -109,9 +114,11 @@ async def free(ctx, uid: str = None):
         error_embed.add_field(name="Error Detail", value=f"`{str(e)}`")
         await status_msg.edit(embed=error_embed)
 
-# --- Start Bot with Keep Alive ---
+# --- রান করার মূল অংশ ---
 if __name__ == "__main__":
-    keep_alive() # Flask সার্ভার চালু করবে
-
-    bot.run(TOKEN)
-
+    keep_alive()  # ব্যাকগ্রাউন্ডে ওয়েব সার্ভার চালু করবে
+    
+    if TOKEN:
+        bot.run(TOKEN)
+    else:
+        print("Error: DISCORD_TOKEN not found! Please set it in Render environment.")
