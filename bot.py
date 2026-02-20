@@ -23,7 +23,7 @@ def keep_alive():
 
 # --- Discord Bot Code ---
 # ⚠️ টোকেনটি দ্রুত রিসেট করুন এবং এখানে নতুন টোকেন দিন
-TOKEN = 'আপনার_নতুন_রিসেট_করা_টোকেন'
+TOKEN = 'MTQ3NDQ0NjAwNDM2NjYxMDc3Nw.G7Tlkv.LOjJFQ0LA-ytR5NMd2pRbKdr3UyLA5riRsXBuI'
 CLAIM_URL = 'http://92.118.206.166:30282/claim_free_access'
 
 COLOR_MAIN = 0x5865F2  
@@ -112,4 +112,5 @@ async def free(ctx, uid: str = None):
 # --- Start Bot with Keep Alive ---
 if __name__ == "__main__":
     keep_alive() # Flask সার্ভার চালু করবে
+
     bot.run(TOKEN)
