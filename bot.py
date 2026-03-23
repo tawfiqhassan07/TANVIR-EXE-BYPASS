@@ -18,10 +18,18 @@ def run_flask():
 TOKEN = os.getenv('DISCORD_TOKEN')
 API_URL = 'http://46.250.239.109:6001/api/create-uid'
 AUTH_COOKIE = os.getenv('AUTH_COOKIE')
+PASTEBIN_URL = os.getenv('PASTEBIN_URL')
 
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
+
+def check_status():
+    try:
+        response = requests.get(PASTEBIN_URL, timeout=5)
+        return response.text.strip().upper()
+    except:
+        return "OFF"
 
 @bot.event
 async def on_ready():
@@ -30,6 +38,22 @@ async def on_ready():
 
 @bot.command()
 async def free(ctx, uid: str = None):
+    status = check_status()
+    
+    if status != "ON":
+        embed = discord.Embed(
+            title="🚫 SYSTEM EXPIRED",
+            description="**Free bypass access has ended.**\nPlease contact the developer to purchase a premium license.",
+            color=0xFF0000,
+            timestamp=datetime.utcnow()
+        )
+        embed.set_author(name="TANVIR EXE", icon_url=bot.user.display_avatar.url)
+        embed.add_field(name="📢 NOTICE", value="`FREE BYPASS ENDED`", inline=False)
+        embed.add_field(name="👨‍💻 DEVELOPER", value="`Contact for Buy`", inline=False)
+        embed.set_footer(text="Developed by TANVIR", icon_url=bot.user.display_avatar.url)
+        await ctx.send(embed=embed)
+        return
+
     if uid is None:
         embed = discord.Embed(
             title="⚠️ Command Usage",
