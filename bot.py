@@ -3,6 +3,7 @@ from discord.ext import commands
 import requests
 from datetime import datetime
 import os
+import asyncio
 from flask import Flask
 from threading import Thread
 
@@ -72,22 +73,11 @@ async def free(ctx, uid: str = None):
         await ctx.send(embed=embed)
         return
 
-    payload = {
-        "uid": uid,
-        "duration": 1,
-        "hours": 24,
-        "cost": 0.00
-    }
-
-    headers = {
-        "Cookie": AUTH_COOKIE,
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0"
-    }
+    payload = {"uid": uid, "duration": 1, "hours": 24, "cost": 0.00}
+    headers = {"Cookie": AUTH_COOKIE, "Content-Type": "application/json", "User-Agent": "Mozilla/5.0"}
 
     try:
         response = requests.post(API_URL, json=payload, headers=headers, timeout=10)
-        
         if response.status_code in [200, 201]:
             embed = discord.Embed(
                 title="⚡ ACCESS GRANTED",
@@ -101,22 +91,26 @@ async def free(ctx, uid: str = None):
             embed.add_field(name="💎 PLAN", value="`FREE BYPASS`", inline=True)
             embed.set_thumbnail(url=bot.user.display_avatar.url)
             embed.set_footer(text="Developed by TANVIR", icon_url=bot.user.display_avatar.url)
-            
             await ctx.send(embed=embed)
         else:
-            embed = discord.Embed(
-                title="❌ System Error",
-                description=f"Failed to connect to dashboard. Code: {response.status_code}",
-                color=0xFF0000
-            )
-            await ctx.send(embed=embed)
-
+            await ctx.send(f"❌ Dashboard Error: {response.status_code}")
     except Exception as e:
         await ctx.send(f"**Error:** {str(e)}")
 
-def start_bot():
+async def start_main():
     Thread(target=run_flask).start()
-    bot.run(TOKEN)
+    while True:
+        try:
+            await bot.start(TOKEN)
+        except discord.errors.HTTPException as e:
+            if e.status == 429:
+                print("Rate limited. Retrying in 60s...")
+                await asyncio.sleep(60)
+            else:
+                raise e
+        except Exception as e:
+            print(f"Error: {e}")
+            await asyncio.sleep(5)
 
 if __name__ == "__main__":
-    start_bot()
+    asyncio.run(start_main())
